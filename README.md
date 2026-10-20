@@ -10,7 +10,7 @@ Grensesnittet er på norsk bokmål.
 
 Versjon 0.1.0 er usignert. Last ned universal-diskfilen fra [GitHub-utgivelsen v0.1.0](https://github.com/xdkurbie/topologi-studio/releases/tag/v0.1.0).
 
-1. Åpne `Topologi Studio_0.1.0_universal.dmg`.
+1. Åpne `Topologi.Studio_0.1.0_universal.dmg`.
 2. Dra **Topologi Studio** til Programmer.
 3. Første gang må du høyreklikke appen og velge **Åpne**, og deretter bekrefte. Et vanlig dobbeltklikk blir stoppet av Gatekeeper.
 4. Hvis macOS fortsatt avviser appen, fjern karantenen:

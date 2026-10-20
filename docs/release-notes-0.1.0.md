@@ -2,7 +2,7 @@ Topologi Studio 0.1.0 er et usignert macOS-program for å tegne nettverkstopolog
 
 ## Installere
 
-1. Last ned `Topologi Studio_0.1.0_universal.dmg`.
+1. Last ned `Topologi.Studio_0.1.0_universal.dmg`.
 2. Åpne diskfilen og dra **Topologi Studio** til Programmer.
 3. Første gang: høyreklikk appen og velg **Åpne**, og bekreft i dialogen. Et vanlig dobbeltklikk blir stoppet av Gatekeeper fordi appen ikke er signert.
 4. Hvis macOS fortsatt sier at appen er skadet eller fra en uidentifisert utvikler, fjern karantenen i Terminal:
