@@ -1,5 +1,6 @@
+import { APP_VERSION } from '../model/types';
+import { isApplePlatform, type RecentFile } from '../platform/native';
 import { esc } from './html';
-import type { RecentFile } from '../platform/native';
 
 export interface Choice {
   id: string;
@@ -124,22 +125,23 @@ export function recentDialog(files: RecentFile[]): Promise<string | null> {
 }
 
 export function shortcutsDialog(): void {
+  const mod = isApplePlatform() ? 'Cmd' : 'Ctrl';
   const rows: [string, string][] = [
     ['V / H / K', 'Velg, hånd, kobling'],
     ['Mellomrom + dra', 'Panorer'],
     ['Rullehjul', 'Panorer'],
-    ['Klyp eller Cmd-rull', 'Zoom mot pekeren'],
-    ['Cmd + / Cmd − / Cmd 0 / Cmd 1', 'Zoom inn, ut, 100 %, tilpass'],
+    [`Klyp eller ${mod}-rull`, 'Zoom mot pekeren'],
+    [`${mod} + / ${mod} − / ${mod} 0 / ${mod} 1`, 'Zoom inn, ut, 100 %, tilpass'],
     ['Shift-klikk', 'Legg til i markering'],
     ['Dra på tomt område', 'Marker flere'],
     ['Piltaster', 'Flytt 1 px, Shift flytter 10 px'],
-    ['Cmd Z / Cmd Shift Z', 'Angre / gjør om'],
-    ['Cmd C / X / V / D', 'Kopier, klipp ut, lim inn, dupliser'],
+    [`${mod} Z / ${mod} Shift Z`, 'Angre / gjør om'],
+    [`${mod} C / X / V / D`, 'Kopier, klipp ut, lim inn, dupliser'],
     ['Delete', 'Slett markering'],
-    ['Cmd A', 'Merk alt'],
-    ['Cmd ] / Cmd [', 'Legg foran / bak'],
-    ['Cmd S / Cmd Shift S / Cmd O / Cmd N', 'Lagre, lagre som, åpne, ny'],
-    ['Cmd Shift E', 'Eksporter PNG'],
+    [`${mod} A`, 'Merk alt'],
+    [`${mod} ] / ${mod} [`, 'Legg foran / bak'],
+    [`${mod} S / ${mod} Shift S / ${mod} O / ${mod} N`, 'Lagre, lagre som, åpne, ny'],
+    [`${mod} Shift E`, 'Eksporter PNG'],
     ['Dobbeltklikk', 'Rediger tekst'],
     ['Alt-klikk i matrise', 'Bytt Allow / Block / Return'],
     ['Escape', 'Avbryt kobling eller markering'],
@@ -155,7 +157,7 @@ export function shortcutsDialog(): void {
 export function aboutDialog(): void {
   const dialog = open(`<div class="modal" role="dialog">
     <h2>Topologi Studio</h2>
-    <p>Versjon 0.1.0. Et skrivebordsprogram for nettverkstopologi, laget med Rust og Tauri.</p>
+    <p>Versjon ${esc(APP_VERSION)}. Et skrivebordsprogram for nettverkstopologi, laget med Rust og Tauri.</p>
     <p>Standardstilen følger skissen «Nettverkstopologi – UniFi Dream Machine SE».</p>
     <div class="modal-actions"><button type="button" class="primary" data-close>Lukk</button></div>
   </div>`);

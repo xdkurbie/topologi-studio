@@ -7,6 +7,16 @@ export function inTauri(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
 
+export function isApplePlatform(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /Mac|iPhone|iPad|Macintosh/.test(`${navigator.platform} ${navigator.userAgent}`);
+}
+
+export function chord(key: string, shift = false): string {
+  if (isApplePlatform()) return `${shift ? '⇧' : ''}⌘${key}`;
+  return shift ? `Ctrl+Shift+${key}` : `Ctrl+${key}`;
+}
+
 async function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   const { invoke: call } = await import('@tauri-apps/api/core');
   return call<T>(command, args);
@@ -119,6 +129,20 @@ export async function setWindowTitle(title: string): Promise<void> {
 export async function quitApp(): Promise<void> {
   if (!inTauri()) return;
   await invoke('force_close');
+}
+
+export async function launchFiles(): Promise<string[]> {
+  if (!inTauri()) return [];
+  return invoke<string[]>('launch_files');
+}
+
+export async function listenOpenPath(handler: (path: string) => void): Promise<() => void> {
+  if (!inTauri()) return () => undefined;
+  const { listen } = await import('@tauri-apps/api/event');
+  const unlisten = await listen<string>('open-path', (event) => handler(event.payload));
+  return () => {
+    unlisten();
+  };
 }
 
 function pickLocalFile(accept: string): Promise<File | null> {

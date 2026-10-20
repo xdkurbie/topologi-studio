@@ -1,5 +1,5 @@
 import { normalize } from './edit';
-import { FILE_VERSION, FORMAT, type TopoDocument, type TopoElement } from './types';
+import { APP_VERSION, FILE_VERSION, FORMAT, type TopoDocument, type TopoElement } from './types';
 
 const TYPES = new Set(['text', 'card', 'pill', 'icon', 'image', 'table', 'matrix', 'connector']);
 
@@ -62,7 +62,7 @@ export function parseDocument(raw: string): TopoDocument {
       grid: typeof data.meta.grid === 'number' ? data.meta.grid : 20,
       snap: data.meta.snap !== false,
       updated: typeof data.meta.updated === 'string' ? data.meta.updated : new Date().toISOString(),
-      appVersion: typeof data.meta.appVersion === 'string' ? data.meta.appVersion : '0.1.0',
+      appVersion: typeof data.meta.appVersion === 'string' ? data.meta.appVersion : APP_VERSION,
     },
     canvas: {
       width: requireNumber(data.canvas, 'width', 'lerret'),

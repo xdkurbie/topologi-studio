@@ -1,6 +1,6 @@
 export const FORMAT = 'topologi-studio' as const;
 export const FILE_VERSION = 1 as const;
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION = '0.1.1';
 
 export type ThemeId = 'dark' | 'light';
 export type Align = 'start' | 'middle' | 'end';

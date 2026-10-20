@@ -1,6 +1,6 @@
 # Topologi Studio
 
-Topologi Studio er et macOS-program for å tegne nettverkstopologi. Det er laget med Tauri 2 og en TypeScript-frontend som tegner på et SVG-lerret. Standardutseendet er mørkt, og den innebygde malen gjenskaper skissen «Nettverkstopologi – UniFi Dream Machine SE».
+Topologi Studio er et program for macOS og Windows for å tegne nettverkstopologi. Det er laget med Tauri 2 og en TypeScript-frontend som tegner på et SVG-lerret. Standardutseendet er mørkt, og den innebygde malen gjenskaper skissen «Nettverkstopologi – UniFi Dream Machine SE».
 
 Grensesnittet er på norsk bokmål.
 
@@ -8,9 +8,11 @@ Grensesnittet er på norsk bokmål.
 
 ## Installere
 
-Versjon 0.1.0 er usignert. Last ned universal-diskfilen fra [GitHub-utgivelsen v0.1.0](https://github.com/xdkurbie/topologi-studio/releases/tag/v0.1.0).
+Versjon 0.1.1 er usignert. Last ned filene fra [GitHub-utgivelsen v0.1.1](https://github.com/xdkurbie/topologi-studio/releases/tag/v0.1.1). Skriften DejaVu Sans følger med, så tegningen og eksport til PNG, SVG og PDF er lik på macOS og Windows.
 
-1. Åpne `Topologi.Studio_0.1.0_universal.dmg`.
+### macOS
+
+1. Åpne universal-diskfilen (`.dmg`) for Apple Silicon og Intel.
 2. Dra **Topologi Studio** til Programmer.
 3. Første gang må du høyreklikke appen og velge **Åpne**, og deretter bekrefte. Et vanlig dobbeltklikk blir stoppet av Gatekeeper.
 4. Hvis macOS fortsatt avviser appen, fjern karantenen:
@@ -19,7 +21,17 @@ Versjon 0.1.0 er usignert. Last ned universal-diskfilen fra [GitHub-utgivelsen v
 xattr -dr com.apple.quarantine "/Applications/Topologi Studio.app"
 ```
 
-Appen kjører på Apple Silicon og Intel (macOS 11 eller nyere).
+Appen krever macOS 11 eller nyere. Snarveiene bruker Cmd.
+
+### Windows
+
+Velg x64 for en vanlig Intel- eller AMD-PC, eller ARM64 for Windows på ARM. Hver arkitektur har et NSIS-installasjonsprogram (`.exe`) og en Windows Installer-pakke (`.msi`).
+
+1. Start installasjonsfilen. NSIS installerer for den påloggede brukeren. MSI kan be om administrator.
+2. SmartScreen advarer fordi filen ikke er signert. Velg **Mer informasjon** (More info) og deretter **Kjør likevel** (Run anyway).
+3. Installasjonen legger inn WebView2 med en innebygd bootstrapper hvis Windows mangler kjøretiden, og knytter `.topo` til programmet.
+
+Snarveiene bruker Ctrl. Filvinduene er Windows sine egne.
 
 ## Slik ser malen ut
 
@@ -45,32 +57,32 @@ Biblioteket til venstre har kort, tekst, piller, tabell, matrise, bilde og enhet
 
 Inspektøren til høyre endrer tekst, skrift, farger, radius og linjestil. Matriseceller veksler mellom Allow All, Block All og Allow Return. Lag-fanen viser rekkefølgen. Rutenett, festing og justeringshjelpelinjer kan slås av. Hold Alt nede mens du drar for å slippe festingen.
 
-Filer lagres som `.topo` (JSON, format `topologi-studio`, versjon 1). Bilder du tar inn, ligger inne i filen. Programmet husker nylige filer og autolagrer til én gjenopprettingsplass. Eksporter PNG (1×, 2× eller 3×), SVG eller PDF. I nettleseren under utvikling lastes filer ned. I appen brukes macOS sine filvinduer.
+Filer lagres som `.topo` (JSON, format `topologi-studio`, versjon 1). Bilder du tar inn, ligger inne i filen. Programmet husker nylige filer og autolagrer til én gjenopprettingsplass. Eksporter PNG (1×, 2× eller 3×), SVG eller PDF. I nettleseren under utvikling lastes filer ned. I appen brukes de innebygde filvinduene på macOS og Windows. En installert app åpner `.topo` når du dobbeltklikker filen.
 
-Menylinjen i appen er den vanlige macOS-linjen. Når du kjører frontend alene, ligger de samme menyene inne i vinduet.
+Menylinjen er systemets egen. På macOS står snarveiene med Cmd, på Windows med Ctrl. Når du kjører frontend alene, ligger de samme menyene inne i vinduet og følger plattformen nettleseren kjører på.
 
 ## Tastatursnarveier
 
-| Taster | Handling |
-| --- | --- |
-| V, H, K | Velg, hånd, kobling |
-| Mellomrom og dra | Panorer |
-| Rullehjul | Panorer |
-| Klyp, eller Cmd og rull | Zoom mot pekeren |
-| Cmd +, Cmd −, Cmd 0, Cmd 1 | Zoom inn, ut, 100 %, tilpass |
-| Shift-klikk | Legg til i markeringen |
-| Dra på tomt område | Marker flere |
-| Piltaster | Flytt 1 px, Shift flytter 10 px |
-| Cmd Z, Cmd Shift Z | Angre, gjør om |
-| Cmd C, X, V, D | Kopier, klipp ut, lim inn, dupliser |
-| Delete | Slett |
-| Cmd A | Merk alt |
-| Cmd ] og Cmd [ | Flytt foran eller bak |
-| Cmd S, Cmd Shift S, Cmd O, Cmd N | Lagre, lagre som, åpne, ny |
-| Cmd Shift E | Eksporter PNG |
-| Dobbeltklikk | Rediger tekst |
-| Alt-klikk i en matrise | Bytt Allow / Block / Return |
-| Escape | Avbryt kobling eller markering |
+| macOS | Windows | Handling |
+| --- | --- | --- |
+| V, H, K | V, H, K | Velg, hånd, kobling |
+| Mellomrom og dra | Mellomrom og dra | Panorer |
+| Rullehjul | Rullehjul | Panorer |
+| Klyp, eller Cmd og rull | Ctrl og rull | Zoom mot pekeren |
+| Cmd +, Cmd −, Cmd 0, Cmd 1 | Ctrl +, Ctrl −, Ctrl 0, Ctrl 1 | Zoom inn, ut, 100 %, tilpass |
+| Shift-klikk | Shift-klikk | Legg til i markeringen |
+| Dra på tomt område | Dra på tomt område | Marker flere |
+| Piltaster | Piltaster | Flytt 1 px, Shift flytter 10 px |
+| Cmd Z, Cmd Shift Z | Ctrl Z, Ctrl Shift Z | Angre, gjør om |
+| Cmd C, X, V, D | Ctrl C, X, V, D | Kopier, klipp ut, lim inn, dupliser |
+| Delete | Delete | Slett |
+| Cmd A | Ctrl A | Merk alt |
+| Cmd ] og Cmd [ | Ctrl ] og Ctrl [ | Flytt foran eller bak |
+| Cmd S, Cmd Shift S, Cmd O, Cmd N | Ctrl S, Ctrl Shift S, Ctrl O, Ctrl N | Lagre, lagre som, åpne, ny |
+| Cmd Shift E | Ctrl Shift E | Eksporter PNG |
+| Dobbeltklikk | Dobbeltklikk | Rediger tekst |
+| Alt-klikk i en matrise | Alt-klikk i en matrise | Bytt Allow / Block / Return |
+| Escape | Escape | Avbryt kobling eller markering |
 
 ## Inspirasjon
 
@@ -88,11 +100,11 @@ Avhengigheter hentes inn via npm og Cargo. Skriften på lerretet er DejaVu Sans,
 
 ## Begrensninger
 
-- Appen er ikke signert eller notarisert.
+- Appen er ikke signert eller notarisert. macOS bruker Gatekeeper, Windows bruker SmartScreen.
 - PDF-eksporten er et bilde i en PDF. Teksten kan ikke merkes.
 - Ortogonal ruting knekker i rett vinkel og går ikke rundt andre elementer.
 - Autolagring har én plass, ikke en historikk.
-- Universal-bygget lages på GitHub Actions. Denne maskinen kan ikke pakke en macOS-diskfil lokalt.
+- Installasjonsfilene lages på GitHub Actions. Denne maskinen kan ikke pakke macOS- eller Windows-installere lokalt.
 
 ## Utvikling
 
@@ -102,4 +114,4 @@ npm test
 npm run dev
 ```
 
-Frontend kjører på `http://127.0.0.1:1420`. `?doc=unifi` åpner malen direkte. Appen bygges med `npm run tauri build -- --target universal-apple-darwin` på en Mac. Utgivelsen v0.1.0 lages av `.github/workflows/release.yml` når `main` oppdateres.
+Frontend kjører på `http://127.0.0.1:1420`. `?doc=unifi` åpner malen direkte. På en Mac bygges diskfilen med `npm run tauri build -- --target universal-apple-darwin --bundles app,dmg`. På Windows bygges installerne med `npm run tauri build -- --bundles nsis,msi`. Utgivelsen v0.1.1 lages av `.github/workflows/release.yml` når `main` oppdateres.

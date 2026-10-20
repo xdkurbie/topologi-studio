@@ -35,10 +35,14 @@ import {
 import { cycleCell, ICON_NATIVE, type Box, type Handle, type IconKind, type Port, type TopoElement } from '../model/types';
 import { themeById } from '../model/theme';
 import {
+  chord,
   clearAutosave,
   inTauri,
+  isApplePlatform,
+  launchFiles,
   listRecent,
   listenMenu,
+  listenOpenPath,
   loadAutosave,
   openTopo,
   quitApp,
@@ -153,17 +157,34 @@ export class Studio {
 
   async start(): Promise<void> {
     if (inTauri()) document.documentElement.classList.add('tauri');
+    if (isApplePlatform()) document.documentElement.classList.add('mac');
     const params = new URLSearchParams(location.search);
-    if (params.get('frame') === 'mac') document.documentElement.classList.add('tauri');
+    if (params.get('frame') === 'mac') document.documentElement.classList.add('tauri', 'mac');
     await listenMenu((id) => {
       void this.run(id, 'menu');
     });
+    await listenOpenPath((path) => {
+      void this.openFromPath(path);
+    });
     const preset = params.get('doc');
+    const launched = inTauri() ? await launchFiles().catch(() => []) : [];
     if (preset === 'unifi') this.editor.load(unifiTemplate(), null);
     else if (preset === 'blank') this.editor.load(blankDocument(this.editor.doc.meta.theme), null);
+    else if (launched[0]) await this.openFromPath(launched[0]);
     else await this.welcome();
     requestAnimationFrame(() => this.editor.fit(this.stage.clientWidth, this.stage.clientHeight));
     window.addEventListener('resize', () => this.schedulePaint());
+  }
+
+  private async openFromPath(path: string): Promise<void> {
+    if (!path || this.editor.filePath === path) return;
+    try {
+      this.editor.load(parseDocument(await readPath(path)), path);
+      await rememberRecent(path, this.editor.doc.meta.title);
+      this.editor.fit(this.stage.clientWidth, this.stage.clientHeight);
+    } catch (error) {
+      await this.alert(error);
+    }
   }
 
   private async welcome(): Promise<void> {
@@ -1347,40 +1368,40 @@ export class Studio {
 function shellHtml(): string {
   return `<nav class="menubar">
     ${menu('Fil', [
-      ['new', 'Nytt…', '⌘N'],
-      ['open', 'Åpne…', '⌘O'],
+      ['new', 'Nytt…', chord('N')],
+      ['open', 'Åpne…', chord('O')],
       ['recent', 'Åpne nylig…', ''],
-      ['save', 'Lagre', '⌘S'],
-      ['save-as', 'Lagre som…', '⇧⌘S'],
-      ['export-png', 'Eksporter PNG…', '⇧⌘E'],
+      ['save', 'Lagre', chord('S')],
+      ['save-as', 'Lagre som…', chord('S', true)],
+      ['export-png', 'Eksporter PNG…', chord('E', true)],
       ['export-svg', 'Eksporter SVG…', ''],
       ['export-pdf', 'Eksporter PDF…', ''],
     ])}
     ${menu('Rediger', [
-      ['undo', 'Angre', '⌘Z'],
-      ['redo', 'Gjør om', '⇧⌘Z'],
-      ['cut', 'Klipp ut', '⌘X'],
-      ['copy', 'Kopier', '⌘C'],
-      ['paste', 'Lim inn', '⌘V'],
-      ['duplicate', 'Dupliser', '⌘D'],
-      ['delete', 'Slett', '⌫'],
-      ['select-all', 'Merk alt', '⌘A'],
+      ['undo', 'Angre', chord('Z')],
+      ['redo', 'Gjør om', chord('Z', true)],
+      ['cut', 'Klipp ut', chord('X')],
+      ['copy', 'Kopier', chord('C')],
+      ['paste', 'Lim inn', chord('V')],
+      ['duplicate', 'Dupliser', chord('D')],
+      ['delete', 'Slett', isApplePlatform() ? '⌫' : 'Del'],
+      ['select-all', 'Merk alt', chord('A')],
     ])}
     ${menu('Vis', [
-      ['zoom-in', 'Forstørr', '⌘+'],
-      ['zoom-out', 'Forminsk', '⌘−'],
-      ['zoom-100', '100 %', '⌘0'],
-      ['zoom-fit', 'Tilpass vindu', '⌘1'],
+      ['zoom-in', 'Forstørr', chord('+')],
+      ['zoom-out', 'Forminsk', chord('−')],
+      ['zoom-100', '100 %', chord('0')],
+      ['zoom-fit', 'Tilpass vindu', chord('1')],
       ['toggle-grid', 'Rutenett', ''],
       ['toggle-snap', 'Fest til rutenett', ''],
       ['theme-dark', 'Mørkt tema', ''],
       ['theme-light', 'Lyst tema', ''],
     ])}
     ${menu('Objekt', [
-      ['front', 'Legg foran', '⇧⌘]'],
-      ['back', 'Legg bakerst', '⇧⌘['],
-      ['forward', 'Flytt frem', '⌘]'],
-      ['backward', 'Flytt bak', '⌘['],
+      ['front', 'Legg foran', chord(']', true)],
+      ['back', 'Legg bakerst', chord('[', true)],
+      ['forward', 'Flytt frem', chord(']')],
+      ['backward', 'Flytt bak', chord('[')],
       ['align-left', 'Venstrejuster', ''],
       ['align-hcenter', 'Midtstill horisontalt', ''],
       ['align-right', 'Høyrejuster', ''],

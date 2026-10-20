@@ -161,7 +161,7 @@ html.theme-light .menu-pop { background: rgba(255, 255, 255, 0.96); }
   -webkit-app-region: drag;
 }
 
-html.tauri .toolbar { padding-left: 84px; }
+html.tauri.mac .toolbar { padding-left: 84px; }
 
 .tb-group {
   display: flex;

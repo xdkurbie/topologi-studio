@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
@@ -8,6 +9,28 @@ use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_dialog::DialogExt;
 
 static ALLOW_CLOSE: AtomicBool = AtomicBool::new(false);
+static OPEN_PATHS: Mutex<Vec<String>> = Mutex::new(Vec::new());
+
+fn remember_topo(path: String) {
+    let file = PathBuf::from(&path);
+    let ext = file.extension().and_then(|value| value.to_str()).unwrap_or("");
+    if !ext.eq_ignore_ascii_case("topo") || !file.is_file() {
+        return;
+    }
+    let Ok(mut paths) = OPEN_PATHS.lock() else {
+        return;
+    };
+    if !paths.iter().any(|item| item == &path) {
+        paths.push(path);
+    }
+}
+
+fn launch_paths() -> Vec<String> {
+    for arg in std::env::args().skip(1) {
+        remember_topo(arg);
+    }
+    OPEN_PATHS.lock().map(|paths| paths.clone()).unwrap_or_default()
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct RecentFile {
@@ -132,6 +155,11 @@ fn autosave_clear(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn launch_files() -> Vec<String> {
+    launch_paths()
+}
+
+#[tauri::command]
 fn force_close(window: tauri::WebviewWindow) {
     ALLOW_CLOSE.store(true, Ordering::SeqCst);
     let _ = window.close();
@@ -230,11 +258,27 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     Menu::with_items(app, &[&app_menu, &file_menu, &edit_menu, &view_menu, &object_menu, &help_menu])
 }
 
+fn handle_runtime_event(app: &AppHandle, event: &tauri::RunEvent) {
+    #[cfg(target_os = "macos")]
+    if let tauri::RunEvent::Opened { urls } = event {
+        for url in urls {
+            if let Ok(path) = url.to_file_path() {
+                let text = path.to_string_lossy().into_owned();
+                remember_topo(text.clone());
+                let _ = app.emit("open-path", text);
+            }
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (app, event);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            let _ = launch_paths();
             let menu = build_menu(app.handle())?;
             app.set_menu(menu)?;
             app.on_menu_event(|app, event| {
@@ -266,8 +310,10 @@ pub fn run() {
             autosave_write,
             autosave_read,
             autosave_clear,
+            launch_files,
             force_close
         ])
-        .run(tauri::generate_context!())
-        .expect("kunne ikke starte Topologi Studio");
+        .build(tauri::generate_context!())
+        .expect("kunne ikke starte Topologi Studio")
+        .run(|app, event| handle_runtime_event(app, &event));
 }
