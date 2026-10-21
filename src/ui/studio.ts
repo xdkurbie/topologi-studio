@@ -92,6 +92,7 @@ export class Studio {
   private search = '';
   private tab: 'library' | 'layers' = 'library';
   private autosaveTimer = 0;
+  private toastTimer = 0;
   private raf = 0;
   private inline: InlineEdit | null = null;
   private readonly svg: SVGSVGElement;
@@ -543,14 +544,20 @@ export class Studio {
         if (!scale) return;
         if (kind === 'png') {
           const bitmap = await renderBitmap(this.editor.doc, scale);
-          await saveBinary(`${stem}@${scale}x.png`, new Uint8Array(await bitmap.png.arrayBuffer()), 'PNG', ['png']);
+          if (bitmap.notice) this.toast(bitmap.notice);
+          const bytes = new Uint8Array(await bitmap.png.arrayBuffer());
+          const saved = await saveBinary(`${stem}@${bitmap.scale}x.png`, bytes, 'PNG', ['png']);
+          if (!saved) return;
         } else {
-          const pdf = await renderPdf(this.editor.doc, scale);
-          await saveBinary(`${stem}.pdf`, pdf, 'PDF', ['pdf']);
+          const rendered = await renderPdf(this.editor.doc, scale);
+          if (rendered.notice) this.toast(rendered.notice);
+          const saved = await saveBinary(`${stem}.pdf`, rendered.pdf, 'PDF', ['pdf']);
+          if (!saved) return;
         }
       }
     } catch (error) {
-      await this.alert(error);
+      const message = error instanceof Error ? error.message : 'Eksporten feilet.';
+      this.toast(message);
     } finally {
       this.paint();
     }
@@ -579,6 +586,20 @@ export class Studio {
     ]);
     if (choice === 'save') return this.save(false);
     return choice === 'discard';
+  }
+
+  private toast(message: string): void {
+    let element = this.root.querySelector('#toast');
+    if (!(element instanceof HTMLElement)) {
+      element = document.createElement('div');
+      element.id = 'toast';
+      element.setAttribute('role', 'status');
+      this.root.append(element);
+    }
+    element.textContent = message;
+    element.classList.add('show');
+    window.clearTimeout(this.toastTimer);
+    this.toastTimer = window.setTimeout(() => element?.classList.remove('show'), 7000);
   }
 
   private async alert(error: unknown): Promise<void> {

@@ -1,6 +1,6 @@
 # Topologi Studio
 
-Topologi Studio er et program for macOS og Windows for å tegne nettverkstopologi. Det er laget med Tauri 2 og en TypeScript-frontend som tegner på et SVG-lerret. Standardutseendet er mørkt. To innebygde maler gjenskaper UniFi-skisser: den opprinnelige fra 19.10.2026, og «UniFi UDM SE – Mathias/Lars/Harry VLAN (21.10.2026)».
+Topologi Studio er et program for macOS og Windows for å tegne nettverkstopologi. Det er laget med Tauri 2 og en TypeScript-frontend som tegner på et SVG-lerret. Standardutseendet er mørkt. Tre innebygde maler gjenskaper UniFi-skisser: den opprinnelige fra 19.10.2026, «UniFi UDM SE – Mathias/Lars/Harry VLAN (21.10.2026)», og «Perfekt topologi – UDM SE + MikroTik (Lars) 21.10.2026».
 
 Grensesnittet er på norsk bokmål.
 
@@ -8,7 +8,7 @@ Grensesnittet er på norsk bokmål.
 
 ## Installere
 
-Versjon 0.1.2 er usignert. Last ned filene fra [GitHub-utgivelsen v0.1.2](https://github.com/xdkurbie/topologi-studio/releases/tag/v0.1.2). Skriften DejaVu Sans følger med, så tegningen og eksport til PNG, SVG og PDF er lik på macOS og Windows.
+Versjon 0.1.3 er usignert. Last ned filene fra [GitHub-utgivelsen v0.1.3](https://github.com/xdkurbie/topologi-studio/releases/tag/v0.1.3). Skriften DejaVu Sans følger med, så tegningen og eksport til PNG, SVG og PDF er lik på macOS og Windows.
 
 ### macOS
 
@@ -35,7 +35,7 @@ Snarveiene bruker Ctrl. Filvinduene er Windows sine egne.
 
 ## Slik ser malen ut
 
-Bildene under er UniFi-malen fra 19.10.2026. Malen fra 21.10.2026, med eiere Mathias, Lars og Harry, ligger i samme velger.
+Bildene under er UniFi-malen fra 19.10.2026. Malen fra 21.10.2026, med eiere Mathias, Lars og Harry, og «Perfekt topologi – UDM SE + MikroTik (Lars) 21.10.2026» ligger i samme velger.
 
 Øverste del av UniFi-malen, med gateway, ONT og VLAN-tagger:
 
@@ -116,4 +116,4 @@ npm test
 npm run dev
 ```
 
-Frontend kjører på `http://127.0.0.1:1420`. `?doc=unifi` åpner malen fra 19.10.2026, og `?doc=udm-vlan` åpner malen fra 21.10.2026. På en Mac bygges diskfilen med `npm run tauri build -- --target universal-apple-darwin --bundles app,dmg`. På Windows bygges installerne med `npm run tauri build -- --bundles nsis,msi`. Utgivelsen v0.1.2 lages av `.github/workflows/release.yml` når `main` oppdateres.
+Frontend kjører på `http://127.0.0.1:1420`. `?doc=unifi` åpner malen fra 19.10.2026, `?doc=udm-vlan` åpner VLAN-malen fra 21.10.2026, og `?doc=perfekt` åpner MikroTik-malen. På en Mac bygges diskfilen med `npm run tauri build -- --target universal-apple-darwin --bundles app,dmg`. På Windows bygges installerne med `npm run tauri build -- --bundles nsis,msi`. Utgivelsen v0.1.3 lages av `.github/workflows/release.yml` når en `v*`-tag pushes.

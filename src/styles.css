@@ -453,7 +453,27 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .modal button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .modal button.danger { color: var(--danger); }
 
-.template-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.template-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+#toast {
+  position: fixed;
+  z-index: 70;
+  left: 50%;
+  bottom: 44px;
+  max-width: min(560px, calc(100% - 32px));
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #2a2118;
+  color: #f6d48a;
+  border: 1px solid rgba(245, 197, 66, 0.45);
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(8px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .template {
   display: flex;
   flex-direction: column;

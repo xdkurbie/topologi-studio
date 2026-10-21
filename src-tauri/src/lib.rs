@@ -66,28 +66,41 @@ fn file_to_string(path: tauri_plugin_dialog::FilePath) -> Option<String> {
     path.into_path().ok().map(|value| value.to_string_lossy().into_owned())
 }
 
+/// File dialogs must not run inside a synchronous command.
+/// On macOS the IPC handler is the main thread. `blocking_save_file` then
+/// re-enters the AppKit run loop from that thread (`run_on_main_thread` runs
+/// inline when already on the main thread) and the process aborts. No `.ips`
+/// is written, because it is a libdispatch/Rust abort rather than a signal crash.
+/// An async command is polled off the main thread, which is what the dialog
+/// plugin itself does. The window is kept alive for the duration of the modal
+/// and passed as the parent so rfd does not fall back to a sync panel.
+/// Failures return `Err` and never panic.
 #[tauri::command]
-fn pick_open(app: AppHandle) -> Option<String> {
-    let picked = app
-        .dialog()
-        .file()
-        .set_title("Åpne topologi")
-        .add_filter("Topologi", &["topo"])
-        .blocking_pick_file()?;
-    file_to_string(picked)
+async fn pick_open(app: AppHandle) -> Result<Option<String>, String> {
+    let window = app.get_webview_window("main");
+    let mut dialog = app.dialog().file().set_title("Åpne topologi").add_filter("Topologi", &["topo"]);
+    if let Some(window) = &window {
+        dialog = dialog.set_parent(window);
+    }
+    Ok(dialog.blocking_pick_file().and_then(file_to_string))
 }
 
 #[tauri::command]
-fn pick_save(app: AppHandle, title: String, file_name: String, filter_name: String, extensions: Vec<String>) -> Option<String> {
-    let owned: Vec<&str> = extensions.iter().map(String::as_str).collect();
-    let picked = app
-        .dialog()
-        .file()
-        .set_title(title)
-        .set_file_name(file_name)
-        .add_filter(filter_name, &owned)
-        .blocking_save_file()?;
-    file_to_string(picked)
+async fn pick_save(
+    app: AppHandle,
+    title: String,
+    file_name: String,
+    filter_name: String,
+    extensions: Vec<String>,
+) -> Result<Option<String>, String> {
+    let window = app.get_webview_window("main");
+    let mut dialog = app.dialog().file().set_title(title).set_file_name(file_name);
+    if let Some(window) = &window {
+        dialog = dialog.set_parent(window);
+    }
+    let refs: Vec<&str> = extensions.iter().map(String::as_str).collect();
+    dialog = dialog.add_filter(filter_name, &refs);
+    Ok(dialog.blocking_save_file().and_then(file_to_string))
 }
 
 #[tauri::command]
