@@ -1,4 +1,5 @@
 import { normalize } from '../model/edit';
+import { perfektTemplate } from './perfekt';
 import { APP_VERSION, FORMAT, FILE_VERSION, type Anchor, type CardElement, type CardRow, type ConnectorElement, type IconElement, type IconKind, type MatrixCell, type MatrixElement, type PillElement, type Port, type TableElement, type TextElement, type TopoDocument, type TopoElement } from '../model/types';
 import { CELL_PRESETS } from '../model/types';
 import { themeById } from '../model/theme';
@@ -12,7 +13,7 @@ const LINE = '#4a90e2';
 const CARD = '#1f2530';
 const BORDER = '#3a4555';
 
-function abs(x: number, y: number): Anchor {
+export function abs(x: number, y: number): Anchor {
   return { mode: 'abs', x, y };
 }
 
@@ -20,7 +21,7 @@ function rel(id: string, port: Port, ox = 0, oy = 0, t = 0.5): Anchor {
   return { mode: 'el', id, port, t, ox, oy };
 }
 
-function card(id: string, name: string, cx: number, y: number, w: number, title: string, rows: CardRow[], stroke = BORDER): CardElement {
+export function card(id: string, name: string, cx: number, y: number, w: number, title: string, rows: CardRow[], stroke = BORDER, titleColor = '#fff'): CardElement {
   return {
     id,
     name,
@@ -34,7 +35,7 @@ function card(id: string, name: string, cx: number, y: number, w: number, title:
     opacity: 1,
     title,
     titleSize: 25,
-    titleColor: '#fff',
+    titleColor,
     titleWeight: 'bold',
     rows,
     rowSize: 21,
@@ -51,8 +52,8 @@ function card(id: string, name: string, cx: number, y: number, w: number, title:
   };
 }
 
-function pill(id: string, name: string, cx: number, cy: number, text: string, stroke = LINE, textColor = B): PillElement {
-  const w = text.length * 12.5 + 40;
+export function pill(id: string, name: string, cx: number, cy: number, text: string, stroke = LINE, textColor = B, width?: number): PillElement {
+  const w = width ?? text.length * 12.5 + 40;
   return {
     id,
     name,
@@ -70,13 +71,13 @@ function pill(id: string, name: string, cx: number, cy: number, text: string, st
     fill: '#14171c',
     stroke,
     strokeWidth: 2.5,
-    autoWidth: true,
+    autoWidth: width === undefined,
     charW: 12.5,
     padW: 40,
   };
 }
 
-function icon(
+export function icon(
   id: string,
   kind: IconKind,
   x: number,
@@ -111,7 +112,7 @@ function icon(
   };
 }
 
-function wire(id: string, name: string, points: Anchor[], dashed = false): ConnectorElement {
+export function wire(id: string, name: string, points: Anchor[], dashed = false, stroke = LINE, strokeWidth = 4): ConnectorElement {
   return {
     id,
     name,
@@ -125,8 +126,8 @@ function wire(id: string, name: string, points: Anchor[], dashed = false): Conne
     opacity: 1,
     points,
     routing: 'polyline',
-    stroke: LINE,
-    strokeWidth: 4,
+    stroke,
+    strokeWidth,
     dash: dashed ? [14, 10] : null,
     label: '',
     labelSize: 16,
@@ -385,7 +386,7 @@ export function unifiTemplate(): TopoDocument {
   });
 }
 
-function textBlock(id: string, name: string, x: number, baseline: number, text: string, fontSize: number, color: string, weight: TextElement['fontWeight'] = 'normal', align: TextElement['align'] = 'start', w = 800): TextElement {
+export function textBlock(id: string, name: string, x: number, baseline: number, text: string, fontSize: number, color: string, weight: TextElement['fontWeight'] = 'normal', align: TextElement['align'] = 'start', w = 800): TextElement {
   return {
     id,
     name,
@@ -582,7 +583,7 @@ export function udmVlanTemplate(): TopoDocument {
 }
 
 export interface DiagramTemplate {
-  id: 'unifi' | 'udm-vlan';
+  id: 'unifi' | 'udm-vlan' | 'perfekt';
   name: string;
   blurb: string;
   create: () => TopoDocument;
@@ -601,6 +602,12 @@ export function diagramTemplates(): DiagramTemplate[] {
       name: 'UniFi UDM SE – Mathias/Lars/Harry VLAN (21.10.2026)',
       blurb: 'Mathias, Lars og Harry. VLAN, trunk og brannmur. 21.10.2026.',
       create: udmVlanTemplate,
+    },
+    {
+      id: 'perfekt',
+      name: 'Perfekt topologi – UDM SE + MikroTik (Lars) 21.10.2026',
+      blurb: 'UDM SE, USW og Lars sitt segment bak MikroTik. 21.10.2026.',
+      create: perfektTemplate,
     },
   ];
 }

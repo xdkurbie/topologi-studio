@@ -10,7 +10,7 @@ import { diagramTemplates, udmVlanTemplate, unifiTemplate } from './unifi';
 describe('UDM SE VLAN-malen 21.10.2026', () => {
   it('ligger i malvelgeren sammen med den eksisterende malen', () => {
     const templates = diagramTemplates();
-    expect(templates.map((item) => item.id)).toEqual(['unifi', 'udm-vlan']);
+    expect(templates.map((item) => item.id)).toEqual(['unifi', 'udm-vlan', 'perfekt']);
     expect(templates.map((item) => item.name)).toContain('UniFi UDM SE – Mathias/Lars/Harry VLAN (21.10.2026)');
     expect(templates[0].create().meta.updated).toBe(unifiTemplate().meta.updated);
     expect(templates[1].create().meta.updated).toBe('2026-10-21T12:00:00.000Z');
