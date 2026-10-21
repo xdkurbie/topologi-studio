@@ -446,14 +446,14 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   padding: 18px 18px 14px;
 }
 
-.modal.wide { width: min(760px, 100%); }
+.modal.wide { width: min(980px, 100%); }
 .modal h2 { margin: 0 0 6px; font-size: 18px; }
 .modal p { margin: 0 0 14px; color: var(--muted); line-height: 1.45; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 .modal button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .modal button.danger { color: var(--danger); }
 
-.template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.template-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .template {
   display: flex;
   flex-direction: column;
@@ -466,7 +466,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   text-align: left;
 }
 .template:hover { border-color: var(--accent); }
-.template strong { font-size: 13px; }
+.template strong { font-size: 13px; line-height: 1.3; }
 .template span:last-child { color: var(--muted); font-size: 12px; line-height: 1.35; }
 .thumb {
   width: 100%;

@@ -55,7 +55,7 @@ import {
 } from '../platform/native';
 import { overlayMarkup } from '../render/overlay';
 import { sceneMarkup } from '../render/scene';
-import { blankDocument, unifiTemplate } from '../template/unifi';
+import { blankDocument, diagramTemplates } from '../template/unifi';
 import { parseDocument, serializeDocument } from '../model/serialize';
 import { aboutDialog, choose, exportScaleDialog, newDocumentDialog, recentDialog, shortcutsDialog } from './dialogs';
 import { esc } from './html';
@@ -168,7 +168,8 @@ export class Studio {
     });
     const preset = params.get('doc');
     const launched = inTauri() ? await launchFiles().catch(() => []) : [];
-    if (preset === 'unifi') this.editor.load(unifiTemplate(), null);
+    const opened = preset ? diagramTemplates().find((item) => item.id === preset) : undefined;
+    if (opened) this.editor.load(opened.create(), null);
     else if (preset === 'blank') this.editor.load(blankDocument(this.editor.doc.meta.theme), null);
     else if (launched[0]) await this.openFromPath(launched[0]);
     else await this.welcome();
@@ -471,9 +472,10 @@ export class Studio {
 
   private async newDocument(guard: boolean): Promise<void> {
     if (guard && !(await this.confirmDiscard())) return;
-    const thumb = documentToSvg(unifiTemplate());
-    const kind = await newDocumentDialog(thumb);
-    if (kind === 'unifi') this.editor.load(unifiTemplate(), null);
+    const thumbs = Object.fromEntries(diagramTemplates().map((item) => [item.id, documentToSvg(item.create())]));
+    const kind = await newDocumentDialog(thumbs);
+    const chosen = kind ? diagramTemplates().find((item) => item.id === kind) : undefined;
+    if (chosen) this.editor.load(chosen.create(), null);
     else if (kind === 'blank') this.editor.load(blankDocument(this.editor.doc.meta.theme), null);
     else return;
     this.editor.fit(this.stage.clientWidth, this.stage.clientHeight);

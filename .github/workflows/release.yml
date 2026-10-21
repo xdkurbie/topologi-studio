@@ -3,6 +3,7 @@ name: Utgivelse
 on:
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -84,7 +85,7 @@ jobs:
         with:
           path: dist-release
           merge-multiple: true
-      - name: Publiser v0.1.1
+      - name: Publiser v0.1.2
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -92,8 +93,8 @@ jobs:
           mapfile -t files < <(find dist-release -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.msi' \) | sort)
           printf 'Asset: %s\n' "${files[@]}"
           test "${#files[@]}" -ge 5
-          gh release delete v0.1.1 --yes --cleanup-tag || true
-          gh release create v0.1.1 "${files[@]}" \
-            --target main \
-            --title "Topologi Studio 0.1.1" \
-            --notes-file docs/release-notes-0.1.1.md
+          gh release delete v0.1.2 --yes --cleanup-tag || true
+          gh release create v0.1.2 "${files[@]}" \
+            --target "${GITHUB_SHA}" \
+            --title "Topologi Studio 0.1.2" \
+            --notes-file docs/release-notes-0.1.2.md

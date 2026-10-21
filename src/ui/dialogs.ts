@@ -1,5 +1,6 @@
 import { APP_VERSION } from '../model/types';
 import { isApplePlatform, type RecentFile } from '../platform/native';
+import { diagramTemplates } from '../template/unifi';
 import { esc } from './html';
 
 export interface Choice {
@@ -55,34 +56,40 @@ export function choose(title: string, body: string, buttons: Choice[]): Promise<
   });
 }
 
-export function newDocumentDialog(unifiSvg: string): Promise<'blank' | 'unifi' | null> {
+export function newDocumentDialog(thumbs: Record<string, string>): Promise<string | null> {
+  const cards = diagramTemplates()
+    .map(
+      (item) => `<button type="button" class="template" data-template="${esc(item.id)}">
+          <span class="thumb">${thumbs[item.id] ?? ''}</span>
+          <strong>${esc(item.name)}</strong>
+          <span>${esc(item.blurb)}</span>
+        </button>`,
+    )
+    .join('');
+  const ids = new Set(['blank', ...diagramTemplates().map((item) => item.id)]);
   return new Promise((resolve) => {
     const dialog = open(`<div class="modal wide" role="dialog" aria-modal="true">
       <h2>Ny topologi</h2>
-      <p>Velg et tomt ark, eller åpne malen som gjenskaper UniFi-skissen.</p>
+      <p>Velg et tomt ark, eller åpne en mal som gjenskaper en UniFi-skisse.</p>
       <div class="template-grid">
         <button type="button" class="template" data-template="blank">
           <span class="thumb blank-thumb"></span>
           <strong>Tomt dokument</strong>
           <span>Et mørkt ark uten elementer.</span>
         </button>
-        <button type="button" class="template" data-template="unifi">
-          <span class="thumb">${unifiSvg}</span>
-          <strong>UniFi Dream Machine SE</strong>
-          <span>Kort, linjer, VLAN-tabell og brannmur. Lars · 19.10.2026.</span>
-        </button>
+        ${cards}
       </div>
       <div class="modal-actions"><button type="button" data-template="">Avbryt</button></div>
     </div>`);
-    const finish = (value: 'blank' | 'unifi' | null) => {
+    const finish = (value: string | null) => {
       dialog.close();
       resolve(value);
     };
     dialog.element.addEventListener('click', (event) => {
       const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-template]');
       if (!button) return;
-      const value = button.dataset.template;
-      finish(value === 'blank' || value === 'unifi' ? value : null);
+      const value = button.dataset.template ?? '';
+      finish(ids.has(value) ? value : null);
     });
   });
 }

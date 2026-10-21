@@ -385,6 +385,226 @@ export function unifiTemplate(): TopoDocument {
   });
 }
 
+function textBlock(id: string, name: string, x: number, baseline: number, text: string, fontSize: number, color: string, weight: TextElement['fontWeight'] = 'normal', align: TextElement['align'] = 'start', w = 800): TextElement {
+  return {
+    id,
+    name,
+    type: 'text',
+    x,
+    y: baseline - fontSize,
+    w,
+    h: fontSize + 8,
+    z: 0,
+    locked: false,
+    opacity: 1,
+    text,
+    fontSize,
+    fontWeight: weight,
+    color,
+    align,
+  };
+}
+
+export function udmVlanTemplate(): TopoDocument {
+  const title = textBlock('text-title', 'Tittel', 200, 66, 'Nettverkstopologi – UniFi Dream Machine SE', 44, '#fff', 'bold', 'middle', 1500);
+  const subtitle = textBlock('text-sub', 'Undertittel', 200, 104, 'Lars · oppdatert 21.10.2026', 23, '#9aa6b8', 'normal', 'middle', 1500);
+
+  const table: TableElement = {
+    id: 'table-vlan',
+    name: 'VLAN-tabell',
+    type: 'table',
+    x: 60,
+    y: 1400,
+    w: 980,
+    h: 280,
+    z: 0,
+    locked: false,
+    opacity: 1,
+    title: 'VLAN-er',
+    showTitle: true,
+    titleSize: 30,
+    titleColor: '#fff',
+    titleWeight: 'bold',
+    headers: ['Navn', 'Eier', 'VLAN', 'Subnett', 'Gateway', 'DHCP i bruk'],
+    colX: [0, 115, 240, 315, 540, 740],
+    titleDy: 30,
+    headerDy: 80,
+    bodyDy: 120,
+    rowStride: 36,
+    headerSize: 21,
+    bodySize: 21,
+    headerColor: B,
+    bodyColor: T,
+    headerWeight: 'bold',
+    rows: [
+      ['Default', '–', '1', '192.168.1.0/24', '192.168.1.1', '2 / 249'],
+      ['Vlan 10', 'Mathias', '10', '192.168.10.0/24', '192.168.10.1', '0 / 249'],
+      ['Vlan 20', 'Lars', '20', '192.168.20.0/24', '192.168.20.1', '0 / 249'],
+      ['Vlan 30', 'Harry', '30', '192.168.30.0/24', '192.168.30.1', '1 / 249'],
+      ['Transit', 'Trunk', '100', '192.168.100.0/30', '192.168.100.1', '0 / 1'],
+    ],
+  };
+
+  const matrix: MatrixElement = {
+    id: 'matrix-fw',
+    name: 'Brannmur',
+    type: 'matrix',
+    x: 1060,
+    y: 1400,
+    w: 820,
+    h: 520,
+    z: 0,
+    locked: false,
+    opacity: 1,
+    title: 'Brannmur mellom VLAN-er',
+    subtitle: 'rad = fra, kolonne = til',
+    titleSize: 30,
+    titleColor: '#fff',
+    subtitleSize: 18,
+    subtitleColor: '#9aa6b8',
+    rowLabels: ['Vlan 10', 'Vlan 20', 'Vlan 30', 'Transit'],
+    colLabels: ['Vlan 10', 'Vlan 20', 'Vlan 30', 'Transit'],
+    cells: [
+      [cell('Block'), cell('Block'), cell('Block'), cell('Block')],
+      [cell('Block'), cell('Block'), cell('Block'), cell('Block')],
+      [cell('Block'), cell('Block'), cell('Block'), cell('Block')],
+      [cell('Block'), cell('Block'), cell('Block'), cell('Block')],
+    ],
+    notes: [
+      '• Vlan 10 = Mathias · Vlan 20 = Lars · Vlan 30 = Harry',
+      '• Vlan 10/20/30/Transit → External og Gateway: Allow All',
+      '• Vlan 10/20/30/Transit → Internal, VPN, Hotspot, DMZ: Block All',
+      '• Internal → Vlan 10/20/30/Transit: Block All',
+      '• External → alle soner: Allow Return',
+      '• Gateway → alle soner: Allow All',
+    ],
+    labelSize: 20,
+    labelColor: B,
+    cellTextSize: 18,
+    noteSize: 19,
+    noteColor: T,
+    radius: 6,
+    titleDy: 30,
+    subtitleDy: 60,
+    colHeaderDy: 100,
+    cellX: 153,
+    cellY: 115,
+    cellW: 144,
+    cellH: 40,
+    strideX: 150,
+    strideY: 46,
+    rowLabelDy: 28,
+    cellTextDy: 28,
+    noteDy: 339,
+    noteStride: 32,
+  };
+
+  const elements: TopoElement[] = [
+    title,
+    subtitle,
+    wire('wire-isp', 'Til Internett', [rel('icon-isp', 's'), rel('card-internet', 'n')]),
+    wire('wire-wan', 'WAN1', [rel('card-internet', 's'), rel('card-udm', 'n')]),
+    wire('wire-down', 'Ned fra UDM', [rel('card-udm', 's'), rel('icon-j1', 'c')]),
+    wire('wire-bus', 'Hovedbuss', [abs(450, 700), rel('icon-j1', 'c'), abs(1350, 700)]),
+    wire('wire-pc', 'Til Windows PC', [abs(450, 700), rel('card-pc', 'n')]),
+    wire('wire-trunk', 'Til USW', [abs(1350, 700), rel('card-usw', 'n')]),
+    wire('wire-ports', 'Til portliste', [rel('card-udm', 'e', 0, 0, 88 / 182), rel('card-ports', 'w', 0, 0, 270 / 310)], true),
+    icon('icon-isp', 'globe', 862, 132, 76, 76, '#1f4fa8', { strokeWidth: 0, glyph: 'G', glyphSize: 40, name: 'GlobalConnect' }),
+    icon('icon-udm', 'switch', 790, 380, 220, 38, '#e8ebef', { strokeWidth: 0, ports: 6, name: 'UDM' }),
+    icon('icon-pc', 'pc', 394, 799, 110, 76, '#2d3644', { accent: B, name: 'Windows PC' }),
+    icon('icon-switch', 'switch', 1235, 815, 220, 38, '#e8ebef', { strokeWidth: 0, ports: 12, name: 'Svitsj' }),
+    icon('icon-j1', 'junction', 886, 686, 28, 28, LINE, { strokeWidth: 0, name: 'Knute' }),
+    pill('pill-port1', 'Port 1', 450, 750, 'Port 1 · GbE · Default (1)'),
+    pill('pill-trunk', 'Trunk', 1350, 750, 'Port 11 SFP+ → Port 26 · Trunk · native 100', Y, Y),
+    card('card-internet', 'Internett', 900, 222, 460, 'Internett – GlobalConnect', [
+      { text: 'WAN1 (UDM port 9): 192.168.8.220', color: B },
+      { text: 'Latency 10 ms · uptime 100 %', color: T },
+    ]),
+    card('card-udm', 'UDM SE', 900, 432, 520, 'UDM SE – gateway', [
+      { text: '192.168.1.1 · Default (VLAN 1)', color: T },
+      { text: 'MAC 70:a7:41:b5:c5:75', color: T },
+      { text: 'Versjon 5.1.33 · PoE 0/180 W', color: T },
+      { text: 'Ruter + DHCP for alle nett', color: Y },
+    ]),
+    card('card-ports', 'UDM-porter', 1565, 250, 530, 'UDM SE – native VLAN per port', [
+      { text: 'Port 1–2 → Default (1)', color: T },
+      { text: 'Port 3–4 → Vlan 10 · Mathias', color: B },
+      { text: 'Port 5–6 → Vlan 20 · Lars', color: B },
+      { text: 'Port 7–8 → Vlan 30 · Harry', color: B },
+      { text: 'Port 9 → WAN1 (GlobalConnect)', color: T },
+      { text: 'Port 11 SFP+ → Transit (100)', color: Y },
+      { text: '   tagget: 1/10/20/30 (trunk)', color: Y },
+      { text: 'Øvrige VLAN tagget på portene', color: GR },
+    ]),
+    card('card-pc', 'Windows PC', 450, 900, 440, 'Windows PC (0d:ae)', [
+      { text: 'UDM SE port 1 · GbE', color: T },
+      { text: 'Default (VLAN 1)', color: T },
+      { text: '192.168.1.0/24 · gw 192.168.1.1', color: T },
+    ]),
+    card('card-usw', 'USW-24-G2', 1350, 870, 580, 'USW-24-G2 (switch)', [
+      { text: '192.168.1.64 · Default (VLAN 1)', color: T },
+      { text: 'MAC 58:d6:1f:5e:eb:db', color: T },
+      { text: 'Versjon 7.5.15', color: T },
+      { text: 'Uplink: port 26 (SFP) → UDM port 11', color: B },
+      { text: 'SFP+-link på GbE', color: B },
+      { text: 'Native VLAN per port:', color: Y },
+      { text: 'Port 1–6   → Vlan 10 · Mathias', color: B },
+      { text: 'Port 7–12  → Vlan 20 · Lars', color: B },
+      { text: 'Port 13–18 → Vlan 30 · Harry', color: B },
+      { text: 'Port 19–24 → Default (1)', color: T },
+      { text: 'Port 25    → Default (1)', color: T },
+      { text: 'Port 26    → Transit (100), tagget 1/10/20/30', color: Y },
+      { text: 'Ingen klienter ennå', color: GR },
+    ]),
+    table,
+    textBlock('text-vlan-note-1', 'VLAN-merknad', 60, 1730, '• Alle nett rutes på UDM SE (DHCP-server, gw = .1)', 19, T, 'normal', 'start', 720),
+    textBlock('text-vlan-note-2', 'VLAN 30-merknad', 60, 1762, '• Vlan 30: 1 lease – ukjent enhet', 19, Y, 'normal', 'start', 720),
+    matrix,
+  ];
+  elements.forEach((element, index) => {
+    element.z = index + 1;
+  });
+
+  return normalize({
+    format: FORMAT,
+    version: FILE_VERSION,
+    meta: {
+      title: 'Nettverkstopologi – UniFi Dream Machine SE',
+      theme: 'dark',
+      grid: 20,
+      snap: true,
+      updated: '2026-10-21T12:00:00.000Z',
+      appVersion: APP_VERSION,
+    },
+    canvas: { width: 1900, height: 1940, background: '#14171c' },
+    elements,
+  });
+}
+
+export interface DiagramTemplate {
+  id: 'unifi' | 'udm-vlan';
+  name: string;
+  blurb: string;
+  create: () => TopoDocument;
+}
+
+export function diagramTemplates(): DiagramTemplate[] {
+  return [
+    {
+      id: 'unifi',
+      name: 'UniFi Dream Machine SE',
+      blurb: 'Kort, linjer, VLAN-tabell og brannmur. Lars · 19.10.2026.',
+      create: unifiTemplate,
+    },
+    {
+      id: 'udm-vlan',
+      name: 'UniFi UDM SE – Mathias/Lars/Harry VLAN (21.10.2026)',
+      blurb: 'Mathias, Lars og Harry. VLAN, trunk og brannmur. 21.10.2026.',
+      create: udmVlanTemplate,
+    },
+  ];
+}
+
 export function blankDocument(themeId: 'dark' | 'light' = 'dark'): TopoDocument {
   const theme = themeById(themeId);
   return normalize({
