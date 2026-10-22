@@ -1,4 +1,5 @@
 import { normalize } from '../model/edit';
+import { udmLarsTemplate } from './udm-lars';
 import { mikrotikTemplate } from './mikrotik';
 import { perfektTemplate } from './perfekt';
 import { APP_VERSION, FORMAT, FILE_VERSION, type Anchor, type CardElement, type CardRow, type ConnectorElement, type IconElement, type IconKind, type MatrixCell, type MatrixElement, type PillElement, type Port, type TableElement, type TextElement, type TopoDocument, type TopoElement } from '../model/types';
@@ -18,7 +19,7 @@ export function abs(x: number, y: number): Anchor {
   return { mode: 'abs', x, y };
 }
 
-function rel(id: string, port: Port, ox = 0, oy = 0, t = 0.5): Anchor {
+export function rel(id: string, port: Port, ox = 0, oy = 0, t = 0.5): Anchor {
   return { mode: 'el', id, port, t, ox, oy };
 }
 
@@ -584,7 +585,7 @@ export function udmVlanTemplate(): TopoDocument {
 }
 
 export interface DiagramTemplate {
-  id: 'unifi' | 'udm-vlan' | 'perfekt' | 'mikrotik';
+  id: 'unifi' | 'udm-vlan' | 'perfekt' | 'mikrotik' | 'udm-lars';
   name: string;
   blurb: string;
   create: () => TopoDocument;
@@ -615,6 +616,12 @@ export function diagramTemplates(): DiagramTemplate[] {
       name: 'MikroTik-topologi – Lars sitt nett 22.10.2026',
       blurb: 'UDM SE, USW-24-G2 og hEX PoE. Soner, knekkede linjer og portkart. 22.10.2026.',
       create: mikrotikTemplate,
+    },
+    {
+      id: 'udm-lars',
+      name: 'UniFi Dream Machine SE – Lars (oppdatert) 22.10.2026',
+      blurb: 'Oppdatert UDM SE med MikroTik, WINServer25 og VLAN-brannmur. 22.10.2026.',
+      create: udmLarsTemplate,
     },
   ];
 }

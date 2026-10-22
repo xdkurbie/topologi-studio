@@ -11,7 +11,7 @@ import { perfektTemplate } from './perfekt';
 describe('Perfekt topologi – UDM SE + MikroTik', () => {
   it('ligger i malvelgeren uten å fjerne de eldre malene', () => {
     const templates = diagramTemplates();
-    expect(templates.map((item) => item.id)).toEqual(['unifi', 'udm-vlan', 'perfekt', 'mikrotik']);
+    expect(templates.map((item) => item.id)).toEqual(['unifi', 'udm-vlan', 'perfekt', 'mikrotik', 'udm-lars']);
     expect(templates.map((item) => item.name)).toContain('Perfekt topologi – UDM SE + MikroTik (Lars) 21.10.2026');
     expect(templates[0].create().meta.updated).toBe(unifiTemplate().meta.updated);
     const doc = templates[2].create();

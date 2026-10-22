@@ -87,7 +87,7 @@ jobs:
         with:
           path: dist-release
           merge-multiple: true
-      - name: Publiser v0.1.4
+      - name: Publiser v0.1.5
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -95,8 +95,8 @@ jobs:
           mapfile -t files < <(find dist-release -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.msi' \) | sort)
           printf 'Asset: %s\n' "${files[@]}"
           test "${#files[@]}" -ge 5
-          gh release delete v0.1.4 --yes --cleanup-tag || true
-          gh release create v0.1.4 "${files[@]}" \
+          gh release delete v0.1.5 --yes --cleanup-tag || true
+          gh release create v0.1.5 "${files[@]}" \
             --target "${GITHUB_SHA}" \
-            --title "Topologi Studio 0.1.4" \
-            --notes-file docs/release-notes-0.1.4.md
+            --title "Topologi Studio 0.1.5" \
+            --notes-file docs/release-notes-0.1.5.md

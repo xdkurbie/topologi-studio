@@ -10,7 +10,7 @@ import { mikrotikTemplate } from './mikrotik';
 describe('MikroTik-topologi – Lars sitt nett', () => {
   it('ligger i velgeren og lar de eldre malene stå', () => {
     const templates = diagramTemplates();
-    expect(templates.map((item) => item.id)).toEqual(['unifi', 'udm-vlan', 'perfekt', 'mikrotik']);
+    expect(templates.map((item) => item.id)).toEqual(['unifi', 'udm-vlan', 'perfekt', 'mikrotik', 'udm-lars']);
     expect(templates[3].name).toBe('MikroTik-topologi – Lars sitt nett 22.10.2026');
     expect(templates[0].create().meta.updated).toBe(unifiTemplate().meta.updated);
     expect(templates[1].create().meta.updated).toBe(udmVlanTemplate().meta.updated);
