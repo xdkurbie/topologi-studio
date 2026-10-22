@@ -163,6 +163,25 @@ function elementPrims(doc: TopoDocument, element: TopoElement): Prim[] {
       });
       return prims;
     }
+    case 'zone':
+      return [
+        {
+          t: 'rect',
+          x: element.x,
+          y: element.y,
+          w: element.w,
+          h: element.h,
+          rx: element.radius,
+          fill: element.fill,
+          fillOpacity: element.fillOpacity,
+          stroke: element.stroke,
+          sw: element.strokeWidth,
+          dash: element.dash,
+          opacity,
+        },
+        textPrim(element.x + element.padX, element.y + element.titleDy, element.title, element.titleSize, element.titleColor, 'bold', 'start', opacity),
+        textPrim(element.x + element.padX, element.y + element.subtitleDy, element.subtitle, element.subtitleSize, element.subtitleColor, 'normal', 'start', opacity),
+      ];
     case 'connector':
       return connectorPrims(doc, element);
   }

@@ -1,7 +1,7 @@
 import type { Tool } from '../editor/editor';
 import { portsOf } from '../model/geometry';
 import { connectorPoints } from '../model/routing';
-import type { Box, Guide, Point, TopoDocument, TopoElement } from '../model/types';
+import type { Box, Guide, MatrixElement, Point, TableElement, TopoDocument, TopoElement } from '../model/types';
 import { fmt, xmlAttr } from './xml';
 
 export interface OverlayInput {
@@ -116,6 +116,47 @@ export function overlayMarkup(input: OverlayInput): string {
         );
       });
     }
+    if (!element.locked && (element.type === 'matrix' || element.type === 'table')) {
+      parts.push(gridChips(element, zoom));
+    }
   }
   return parts.join('');
+}
+
+function gridChip(action: string, id: string, x: number, y: number, label: string, zoom: number): string {
+  const radius = 9 / zoom;
+  return `<g data-grid="${xmlAttr(action)}" data-id="${xmlAttr(id)}"><circle cx="${fmt(x)}" cy="${fmt(y)}" r="${fmt(radius)}" fill="#4a90e2" stroke="#fff" stroke-width="${fmt(1 / zoom)}"/><text x="${fmt(x)}" y="${fmt(y + 4 / zoom)}" text-anchor="middle" fill="#fff" font-size="${fmt(13 / zoom)}" font-family="DejaVu Sans, Arial, sans-serif" pointer-events="none">${label}</text></g>`;
+}
+
+function gridChips(element: MatrixElement | TableElement, zoom: number): string {
+  const chips: string[] = [];
+  const id = element.id;
+  if (element.type === 'matrix') {
+    element.rowLabels.forEach((_, row) => {
+      if (element.rowLabels.length > 1) {
+        chips.push(gridChip(`grid:del-row:${row}`, id, element.x - 16 / zoom, element.y + element.cellY + row * element.strideY + element.cellH / 2, '−', zoom));
+      }
+    });
+    element.colLabels.forEach((_, col) => {
+      if (element.colLabels.length > 1) {
+        chips.push(gridChip(`grid:del-col:${col}`, id, element.x + element.cellX + col * element.strideX + element.cellW / 2, element.y + element.colHeaderDy - 18 / zoom, '−', zoom));
+      }
+    });
+    chips.push(gridChip('grid:add-row', id, element.x + element.cellX + element.cellW / 2, element.y + element.h + 16 / zoom, '+', zoom));
+    chips.push(gridChip('grid:add-col', id, element.x + element.w + 16 / zoom, element.y + element.cellY + element.cellH / 2, '+', zoom));
+    return chips.join('');
+  }
+  element.rows.forEach((_, row) => {
+    if (element.rows.length > 1) {
+      chips.push(gridChip(`grid:del-row:${row}`, id, element.x - 16 / zoom, element.y + element.bodyDy + row * element.rowStride - 6, '−', zoom));
+    }
+  });
+  element.headers.forEach((_, col) => {
+    if (element.headers.length > 1) {
+      chips.push(gridChip(`grid:del-col:${col}`, id, element.x + (element.colX[col] ?? 0) + 28, element.y + element.headerDy - 18 / zoom, '−', zoom));
+    }
+  });
+  chips.push(gridChip('grid:add-row', id, element.x + 28, element.y + element.h + 16 / zoom, '+', zoom));
+  chips.push(gridChip('grid:add-col', id, element.x + element.w + 16 / zoom, element.y + element.headerDy, '+', zoom));
+  return chips.join('');
 }

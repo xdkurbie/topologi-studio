@@ -1,7 +1,7 @@
 import { normalize } from './edit';
 import { APP_VERSION, FILE_VERSION, FORMAT, type TopoDocument, type TopoElement } from './types';
 
-const TYPES = new Set(['text', 'card', 'pill', 'icon', 'image', 'table', 'matrix', 'connector']);
+const TYPES = new Set(['text', 'card', 'pill', 'icon', 'image', 'table', 'matrix', 'zone', 'connector']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

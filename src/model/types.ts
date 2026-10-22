@@ -1,6 +1,6 @@
 export const FORMAT = 'topologi-studio' as const;
 export const FILE_VERSION = 1 as const;
-export const APP_VERSION = '0.1.3';
+export const APP_VERSION = '0.1.4';
 
 export type ThemeId = 'dark' | 'light';
 export type Align = 'start' | 'middle' | 'end';
@@ -175,6 +175,25 @@ export interface MatrixElement extends ElementBase {
   noteStride: number;
 }
 
+export interface ZoneElement extends ElementBase {
+  type: 'zone';
+  title: string;
+  subtitle: string;
+  titleSize: number;
+  titleColor: string;
+  subtitleSize: number;
+  subtitleColor: string;
+  fill: string;
+  fillOpacity: number;
+  stroke: string;
+  strokeWidth: number;
+  dash: [number, number] | null;
+  radius: number;
+  padX: number;
+  titleDy: number;
+  subtitleDy: number;
+}
+
 export type Anchor =
   | { mode: 'abs'; x: number; y: number }
   | { mode: 'el'; id: string; port: Port; t: number; ox: number; oy: number };
@@ -202,6 +221,7 @@ export type TopoElement =
   | ImageElement
   | TableElement
   | MatrixElement
+  | ZoneElement
   | ConnectorElement;
 
 export type ElementType = TopoElement['type'];
@@ -276,6 +296,8 @@ export function typeLabel(type: ElementType): string {
       return 'Tabell';
     case 'matrix':
       return 'Matrise';
+    case 'zone':
+      return 'Sone';
     case 'connector':
       return 'Kobling';
   }

@@ -1,4 +1,5 @@
 import { normalize } from '../model/edit';
+import { mikrotikTemplate } from './mikrotik';
 import { perfektTemplate } from './perfekt';
 import { APP_VERSION, FORMAT, FILE_VERSION, type Anchor, type CardElement, type CardRow, type ConnectorElement, type IconElement, type IconKind, type MatrixCell, type MatrixElement, type PillElement, type Port, type TableElement, type TextElement, type TopoDocument, type TopoElement } from '../model/types';
 import { CELL_PRESETS } from '../model/types';
@@ -583,7 +584,7 @@ export function udmVlanTemplate(): TopoDocument {
 }
 
 export interface DiagramTemplate {
-  id: 'unifi' | 'udm-vlan' | 'perfekt';
+  id: 'unifi' | 'udm-vlan' | 'perfekt' | 'mikrotik';
   name: string;
   blurb: string;
   create: () => TopoDocument;
@@ -608,6 +609,12 @@ export function diagramTemplates(): DiagramTemplate[] {
       name: 'Perfekt topologi – UDM SE + MikroTik (Lars) 21.10.2026',
       blurb: 'UDM SE, USW og Lars sitt segment bak MikroTik. 21.10.2026.',
       create: perfektTemplate,
+    },
+    {
+      id: 'mikrotik',
+      name: 'MikroTik-topologi – Lars sitt nett 22.10.2026',
+      blurb: 'UDM SE, USW-24-G2 og hEX PoE. Soner, knekkede linjer og portkart. 22.10.2026.',
+      create: mikrotikTemplate,
     },
   ];
 }

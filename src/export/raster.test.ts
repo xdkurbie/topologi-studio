@@ -34,12 +34,12 @@ describe('rasterplan for macOS', () => {
     covers(triple);
 
     const tall = perfektTemplate();
-    expect(tall.canvas).toEqual({ width: 1900, height: 4388, background: '#14171c' });
+    expect(tall.canvas).toEqual({ width: 1900, height: 4422, background: '#14171c' });
     for (const scale of [1, 2, 3]) {
       const plan = rasterPlan(tall.canvas.width, tall.canvas.height, scale);
       expect(plan.tiles.length).toBeGreaterThan(1);
       expect(plan.width).toBe(Math.round(1900 * plan.scale));
-      expect(plan.height).toBe(Math.round(4388 * plan.scale));
+      expect(plan.height).toBe(Math.round(4422 * plan.scale));
       covers(plan);
     }
   });

@@ -147,7 +147,12 @@ function body(element: TopoElement): string {
     case 'matrix':
       return `${field('Tittel', textInput('title', element.title))}
         ${field('Undertekst', textInput('subtitle', element.subtitle))}
-        <p class="hint">Klikk en celle for å veksle mellom Allow All, Block All og Allow Return.</p>
+        <p class="hint">Klikk en celle for å veksle mellom Allow All, Block All og Allow Return. Pluss og minus på kanten legger til og fjerner rader og kolonner. Høyreklikk en overskrift for å sette inn, slette eller gi nytt navn.</p>
+        <div class="button-row"><button type="button" data-add-row>Rad +</button><button type="button" data-add-col>Kolonne +</button></div>
+        <div class="stack-head"><span>Slett rad</span></div>
+        <div class="button-row">${element.rowLabels.map((label, index) => `<button type="button" data-row-del="${index}" title="Slett ${esc(label)}">${esc(label)}</button>`).join('')}</div>
+        <div class="stack-head"><span>Slett kolonne</span></div>
+        <div class="button-row">${element.colLabels.map((label, index) => `<button type="button" data-col-del="${index}" title="Slett ${esc(label)}">${esc(label)}</button>`).join('')}</div>
         <div class="matrix-edit" style="grid-template-columns: minmax(72px, 1.1fr) repeat(${element.colLabels.length}, minmax(0, 1fr))">
           <span></span>
           ${element.colLabels.map((label, index) => `<input data-col-label="${index}" type="text" value="${esc(label)}">`).join('')}
@@ -166,6 +171,15 @@ function body(element: TopoElement): string {
         <div class="stack-head"><span>Notater</span><button type="button" data-add-note>Legg til</button></div>
         ${element.notes.map((note, index) => `<div class="stack-row"><input data-note="${index}" type="text" value="${esc(note)}"><button type="button" data-note-del="${index}">×</button></div>`).join('')}
         <div class="preset-row">${CELL_PRESETS.map((preset) => `<span class="preset" style="background:${preset.fill};color:${preset.color}">${esc(preset.text)}</span>`).join('')}</div>`;
+    case 'zone':
+      return `${field('Tittel', textInput('title', element.title))}
+        ${field('Undertekst', textInput('subtitle', element.subtitle))}
+        ${field('Tittelfarge', colorInput('titleColor', element.titleColor))}
+        ${field('Undertekstfarge', colorInput('subtitleColor', element.subtitleColor))}
+        ${field('Fyll', colorInput('fill', element.fill))}
+        ${field('Kant', colorInput('stroke', element.stroke))}
+        ${field('Fylldekning', numberInput('fillOpacity', element.fillOpacity, 0.01))}
+        ${checkInput('dash', 'Stiplet', !!element.dash)}`;
     case 'connector':
       return `${field('Ruting', selectInput('routing', element.routing, [{ value: 'straight', label: 'Rett' }, { value: 'orthogonal', label: 'Ortogonal' }, { value: 'polyline', label: 'Fri linje' }]))}
         ${field('Farge', colorInput('stroke', element.stroke))}

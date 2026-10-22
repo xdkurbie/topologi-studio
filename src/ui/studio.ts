@@ -32,6 +32,7 @@ import {
   createTable,
   createText,
 } from '../model/factory';
+import { editGrid, type GridOp } from '../model/grid';
 import { cycleCell, ICON_NATIVE, type Box, type Handle, type IconKind, type Port, type TopoElement } from '../model/types';
 import { themeById } from '../model/theme';
 import {
@@ -73,7 +74,7 @@ type Drag =
 
 interface InlineEdit {
   id: string;
-  mode: 'text' | 'card-title' | 'card-row' | 'pill' | 'table' | 'matrix' | 'connector';
+  mode: 'text' | 'card-title' | 'card-row' | 'pill' | 'table' | 'table-header' | 'matrix' | 'matrix-row' | 'matrix-col' | 'zone-title' | 'zone-sub' | 'connector';
   row?: number;
   col?: number;
 }
@@ -337,6 +338,10 @@ export class Studio {
   }
 
   private async run(action: string, source: 'menu' | 'ui' = 'ui'): Promise<void> {
+    if (action.startsWith('grid:')) {
+      this.applyGridAction(action);
+      return;
+    }
     if (source === 'menu' && this.swallow(action)) return;
     switch (action) {
       case 'new':
@@ -852,28 +857,86 @@ export class Studio {
         }
         return updateElement(doc, id, { rows });
       }
-      if (element.type === 'table') {
-        if (op === 'add-row') return updateElement(doc, id, { rows: [...element.rows, element.headers.map(() => '')] });
-        if (op === 'del-row') return updateElement(doc, id, { rows: element.rows.filter((_, row) => row !== index) });
-        if (op === 'add-col') {
-          const headers = [...element.headers, `Kolonne ${element.headers.length + 1}`];
-          const colX = [...element.colX, (element.colX.at(-1) ?? 0) + 160];
-          const rows = element.rows.map((row) => [...row, '']);
-          return updateElement(doc, id, { headers, colX, rows });
-        }
-        if (op === 'del-col') {
-          return updateElement(doc, id, {
-            headers: element.headers.filter((_, col) => col !== index),
-            colX: element.colX.filter((_, col) => col !== index),
-            rows: element.rows.map((row) => row.filter((_, col) => col !== index)),
-          });
-        }
+      if (element.type === 'table' || element.type === 'matrix') {
+        if (op === 'add-row') return editGrid(doc, id, 'add-row');
+        if (op === 'del-row') return editGrid(doc, id, 'del-row', index);
+        if (op === 'add-col') return editGrid(doc, id, 'add-col');
+        if (op === 'del-col') return editGrid(doc, id, 'del-col', index);
       }
       if (element.type === 'matrix' && op === 'add-note') return updateElement(doc, id, { notes: [...element.notes, 'Nytt notat'] });
       if (element.type === 'matrix' && op === 'del-note') return updateElement(doc, id, { notes: element.notes.filter((_, note) => note !== index) });
       return doc;
     });
     this.forceInspector = true;
+  }
+
+  private applyGridAction(action: string): void {
+    const [, op, indexText] = action.split(':');
+    const index = Number(indexText);
+    const id = this.editor.selection[0];
+    if (!id || !op) return;
+    if (op === 'rename-row' || op === 'rename-col') {
+      const element = findElement(this.editor.doc, id);
+      if (element) this.openLabel(element, op === 'rename-row' ? 'row' : 'col', Number.isFinite(index) ? index : 0);
+      return;
+    }
+    const gridOp = op as GridOp;
+    this.editor.apply((doc) => editGrid(doc, id, gridOp, Number.isFinite(index) ? index : 0));
+    this.forceInspector = true;
+  }
+
+  private openLabel(element: TopoElement, axis: 'row' | 'col', index: number): void {
+    if (element.type === 'matrix') {
+      const row = axis === 'row' ? index : undefined;
+      const col = axis === 'col' ? index : undefined;
+      if (axis === 'row') {
+        this.placeInline(element, 'matrix-row', element.rowLabels[index] ?? '', {
+          x: element.x,
+          y: element.y + element.cellY + index * element.strideY,
+          w: Math.max(80, element.cellX - 8),
+          h: element.cellH,
+        }, row, col);
+      } else {
+        this.placeInline(element, 'matrix-col', element.colLabels[index] ?? '', {
+          x: element.x + element.cellX + index * element.strideX,
+          y: element.y + element.colHeaderDy - element.labelSize,
+          w: element.cellW,
+          h: element.labelSize + 8,
+        }, row, col);
+      }
+      return;
+    }
+    if (element.type !== 'table') return;
+    if (axis === 'col') {
+      this.placeInline(element, 'table-header', element.headers[index] ?? '', {
+        x: element.x + (element.colX[index] ?? 0),
+        y: element.y + element.headerDy - element.headerSize,
+        w: 160,
+        h: element.headerSize + 8,
+      }, undefined, index);
+      return;
+    }
+    this.placeInline(element, 'table', element.rows[index]?.[0] ?? '', {
+      x: element.x + (element.colX[0] ?? 0),
+      y: element.y + element.bodyDy + index * element.rowStride - 18,
+      w: 160,
+      h: 28,
+    }, index, 0);
+  }
+
+  private placeInline(element: TopoElement, mode: InlineEdit['mode'], value: string, box: Box, row?: number, col?: number): void {
+    this.inline = { id: element.id, mode, row, col };
+    this.editor.begin();
+    const screen = this.worldToStage(box.x, box.y);
+    this.inlineInput.value = value;
+    this.inlineInput.style.display = 'block';
+    this.inlineInput.style.left = `${screen.x}px`;
+    this.inlineInput.style.top = `${screen.y}px`;
+    this.inlineInput.style.width = `${Math.max(60, box.w * this.editor.zoom)}px`;
+    this.inlineInput.style.height = `${Math.max(22, box.h * this.editor.zoom)}px`;
+    this.inlineInput.style.fontSize = `${Math.max(12, 16 * this.editor.zoom)}px`;
+    this.inlineInput.focus();
+    this.inlineInput.select();
   }
 
   private addBend(id: string): void {
@@ -900,6 +963,12 @@ export class Studio {
 
   private onPointerDown(event: PointerEvent): void {
     if (event.button === 2) return;
+    const gridNode = event.target instanceof Element ? event.target.closest('[data-grid]') : null;
+    if (gridNode) {
+      const action = gridNode.getAttribute('data-grid');
+      if (action) void this.run(action);
+      return;
+    }
     this.closeInline(true);
     this.context.hidden = true;
     const world = this.eventWorld(event);
@@ -1161,25 +1230,63 @@ export class Studio {
       element.colX.forEach((offset, index) => {
         if (localX >= offset) col = index;
       });
-      if (localY >= element.bodyDy - 10) {
+      if (localY < element.bodyDy - 4 && localY >= element.headerDy - element.headerSize) {
+        mode = 'table-header';
+        value = element.headers[col] ?? '';
+        box = { x: element.x + (element.colX[col] ?? 0), y: element.y + element.headerDy - element.headerSize, w: 160, h: element.headerSize + 8 };
+      } else if (localY >= element.bodyDy - 10) {
         row = Math.max(0, Math.min(element.rows.length - 1, Math.floor((localY - element.bodyDy) / element.rowStride)));
         mode = 'table';
         value = element.rows[row]?.[col] ?? '';
         box = { x: element.x + (element.colX[col] ?? 0), y: element.y + element.bodyDy + row * element.rowStride - 18, w: 140, h: 28 };
       }
     } else if (element.type === 'matrix') {
-      const cell = matrixCellAt(element, world);
-      if (cell) {
-        mode = 'matrix';
-        row = cell.row;
-        col = cell.col;
-        value = element.cells[cell.row][cell.col].text;
+      const header = matrixHeaderAt(element, world);
+      if (header?.axis === 'col') {
+        mode = 'matrix-col';
+        col = header.index;
+        value = element.colLabels[header.index] ?? '';
         box = {
-          x: element.x + element.cellX + cell.col * element.strideX,
-          y: element.y + element.cellY + cell.row * element.strideY,
+          x: element.x + element.cellX + header.index * element.strideX,
+          y: element.y + element.colHeaderDy - element.labelSize,
           w: element.cellW,
+          h: element.labelSize + 8,
+        };
+      } else if (header?.axis === 'row') {
+        mode = 'matrix-row';
+        row = header.index;
+        value = element.rowLabels[header.index] ?? '';
+        box = {
+          x: element.x,
+          y: element.y + element.cellY + header.index * element.strideY,
+          w: Math.max(80, element.cellX - 8),
           h: element.cellH,
         };
+      } else {
+        const cell = matrixCellAt(element, world);
+        if (cell) {
+          mode = 'matrix';
+          row = cell.row;
+          col = cell.col;
+          value = element.cells[cell.row][cell.col].text;
+          box = {
+            x: element.x + element.cellX + cell.col * element.strideX,
+            y: element.y + element.cellY + cell.row * element.strideY,
+            w: element.cellW,
+            h: element.cellH,
+          };
+        }
+      }
+    } else if (element.type === 'zone') {
+      const local = world.y - element.y;
+      if (local < element.titleDy + 8) {
+        mode = 'zone-title';
+        value = element.title;
+        box = { x: element.x + element.padX, y: element.y + 6, w: Math.max(80, element.w - element.padX * 2), h: 28 };
+      } else {
+        mode = 'zone-sub';
+        value = element.subtitle;
+        box = { x: element.x + element.padX, y: element.y + element.subtitleDy - 16, w: Math.max(80, element.w - element.padX * 2), h: 24 };
       }
     } else if (element.type === 'connector') {
       mode = 'connector';
@@ -1189,18 +1296,7 @@ export class Studio {
       box = { x: mid.x - 80, y: mid.y - 28, w: 160, h: 28 };
     }
     if (!mode) return;
-    this.inline = { id: element.id, mode, row, col };
-    this.editor.begin();
-    const screen = this.worldToStage(box.x, box.y);
-    this.inlineInput.value = value;
-    this.inlineInput.style.display = 'block';
-    this.inlineInput.style.left = `${screen.x}px`;
-    this.inlineInput.style.top = `${screen.y}px`;
-    this.inlineInput.style.width = `${Math.max(60, box.w * this.editor.zoom)}px`;
-    this.inlineInput.style.height = `${Math.max(22, box.h * this.editor.zoom)}px`;
-    this.inlineInput.style.fontSize = `${Math.max(12, 16 * this.editor.zoom)}px`;
-    this.inlineInput.focus();
-    this.inlineInput.select();
+    this.placeInline(element, mode, value, box, row, col);
   }
 
   private commitInlineLive(): void {
@@ -1225,6 +1321,20 @@ export class Studio {
         const cells = element.cells.map((line, rowIndex) => line.map((cell, colIndex) => (rowIndex === row && colIndex === col ? { ...cell, text: value } : cell)));
         return updateElement(doc, id, { cells });
       }
+      if (mode === 'matrix-row' && element.type === 'matrix' && row !== undefined) {
+        const rowLabels = element.rowLabels.map((label, index) => (index === row ? value : label));
+        return updateElement(doc, id, { rowLabels });
+      }
+      if (mode === 'matrix-col' && element.type === 'matrix' && col !== undefined) {
+        const colLabels = element.colLabels.map((label, index) => (index === col ? value : label));
+        return updateElement(doc, id, { colLabels });
+      }
+      if (mode === 'table-header' && element.type === 'table' && col !== undefined) {
+        const headers = element.headers.map((header, index) => (index === col ? value : header));
+        return updateElement(doc, id, { headers });
+      }
+      if (mode === 'zone-title' && element.type === 'zone') return updateElement(doc, id, { title: value });
+      if (mode === 'zone-sub' && element.type === 'zone') return updateElement(doc, id, { subtitle: value });
       if (mode === 'connector' && element.type === 'connector') return updateElement(doc, id, { label: value });
       return doc;
     });
@@ -1243,14 +1353,31 @@ export class Studio {
     event.preventDefault();
     const info = hitInfo(event);
     if (info.id && !this.editor.selection.includes(info.id)) this.editor.select([info.id]);
-    const items = [
+    const element = info.id ? findElement(this.editor.doc, info.id) : undefined;
+    const items: [string, string][] = [];
+    if (element?.type === 'matrix' || element?.type === 'table') {
+      const hit = element.type === 'matrix' ? matrixGridHit(element, this.eventWorld(event)) : tableGridHit(element, this.eventWorld(event));
+      const row = hit.row ?? 0;
+      const col = hit.col ?? 0;
+      items.push(
+        [`grid:add-row-before:${row}`, 'Sett inn rad over'],
+        [`grid:add-row-after:${row}`, 'Sett inn rad under'],
+        [`grid:del-row:${row}`, 'Slett rad'],
+        [`grid:add-col-before:${col}`, 'Sett inn kolonne til venstre'],
+        [`grid:add-col-after:${col}`, 'Sett inn kolonne til høyre'],
+        [`grid:del-col:${col}`, 'Slett kolonne'],
+        [`grid:rename-row:${row}`, 'Gi raden nytt navn'],
+        [`grid:rename-col:${col}`, 'Gi kolonnen nytt navn'],
+      );
+    }
+    items.push(
       ['copy', 'Kopier'],
       ['paste', 'Lim inn'],
       ['duplicate', 'Dupliser'],
       ['delete', 'Slett'],
       ['front', 'Legg foran'],
       ['back', 'Legg bakerst'],
-    ];
+    );
     this.context.innerHTML = items.map(([action, label]) => `<button type="button" data-action="${action}">${label}</button>`).join('');
     this.context.hidden = false;
     this.context.style.left = `${event.clientX}px`;
@@ -1592,6 +1719,41 @@ function matrixCellAt(element: Extract<TopoElement, { type: 'matrix' }>, world: 
   return { row, col };
 }
 
+function matrixHeaderAt(element: Extract<TopoElement, { type: 'matrix' }>, world: { x: number; y: number }): { axis: 'row' | 'col'; index: number } | null {
+  const localX = world.x - element.x;
+  const localY = world.y - element.y;
+  const col = Math.floor((localX - element.cellX) / element.strideX);
+  const row = Math.floor((localY - element.cellY) / element.strideY);
+  if (col >= 0 && col < element.colLabels.length && localY >= element.colHeaderDy - element.labelSize - 4 && localY < element.cellY) {
+    return { axis: 'col', index: col };
+  }
+  if (row >= 0 && row < element.rowLabels.length && localX < element.cellX && localY >= element.cellY) {
+    return { axis: 'row', index: row };
+  }
+  return null;
+}
+
+function matrixGridHit(element: Extract<TopoElement, { type: 'matrix' }>, world: { x: number; y: number }): { row: number | null; col: number | null } {
+  const header = matrixHeaderAt(element, world);
+  const cell = matrixCellAt(element, world);
+  return {
+    row: header?.axis === 'row' ? header.index : cell?.row ?? null,
+    col: header?.axis === 'col' ? header.index : cell?.col ?? null,
+  };
+}
+
+function tableGridHit(element: Extract<TopoElement, { type: 'table' }>, world: { x: number; y: number }): { row: number | null; col: number | null } {
+  const localX = world.x - element.x;
+  const localY = world.y - element.y;
+  let col = 0;
+  element.colX.forEach((offset, index) => {
+    if (localX >= offset) col = index;
+  });
+  if (localY < element.bodyDy) return { row: null, col };
+  const row = Math.max(0, Math.min(element.rows.length - 1, Math.floor((localY - element.bodyDy) / element.rowStride)));
+  return { row, col };
+}
+
 function structureKey(editor: Editor): string {
   return editor.selection
     .map((id) => {
@@ -1599,7 +1761,7 @@ function structureKey(editor: Editor): string {
       if (!element) return id;
       if (element.type === 'card') return `${id}:card:${element.rows.length}:${element.autoHeight}`;
       if (element.type === 'table') return `${id}:table:${element.rows.length}x${element.headers.length}`;
-      if (element.type === 'matrix') return `${id}:matrix:${element.rowLabels.length}:${element.notes.length}:${element.cells.map((row) => row.map((cell) => cell.text).join(',')).join(';')}`;
+      if (element.type === 'matrix') return `${id}:matrix:${element.rowLabels.length}x${element.colLabels.length}:${element.notes.length}:${element.cells.map((row) => row.map((cell) => cell.text).join(',')).join(';')}`;
       if (element.type === 'connector') return `${id}:wire:${element.points.length}:${element.routing}`;
       if (element.type === 'icon') return `${id}:icon:${element.icon}`;
       return `${id}:${element.type}`;

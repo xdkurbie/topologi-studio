@@ -39,6 +39,7 @@ export interface Prim {
   d?: string;
   href?: string;
   hit?: boolean;
+  fillOpacity?: number;
 }
 
 function attrs(parts: [string, string | number | undefined | null][]): string {
@@ -58,8 +59,10 @@ export function primToSvg(prim: Prim): string {
       ['height', prim.h],
       ['rx', prim.rx && prim.rx > 0 ? prim.rx : undefined],
       ['fill', prim.fill],
+      ['fill-opacity', prim.fillOpacity !== undefined && prim.fillOpacity < 0.999 ? prim.fillOpacity : undefined],
       ['stroke', prim.stroke || undefined],
       ['stroke-width', prim.stroke ? prim.sw : undefined],
+      ['stroke-dasharray', prim.dash ? `${fmt(prim.dash[0])} ${fmt(prim.dash[1])}` : undefined],
       ['opacity', opacity],
       ['data-hit', prim.hit ? '1' : undefined],
     ])}/>`;

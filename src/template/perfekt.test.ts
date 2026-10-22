@@ -11,13 +11,13 @@ import { perfektTemplate } from './perfekt';
 describe('Perfekt topologi – UDM SE + MikroTik', () => {
   it('ligger i malvelgeren uten å fjerne de eldre malene', () => {
     const templates = diagramTemplates();
-    expect(templates.map((item) => item.id)).toEqual(['unifi', 'udm-vlan', 'perfekt']);
+    expect(templates.map((item) => item.id)).toEqual(['unifi', 'udm-vlan', 'perfekt', 'mikrotik']);
     expect(templates.map((item) => item.name)).toContain('Perfekt topologi – UDM SE + MikroTik (Lars) 21.10.2026');
     expect(templates[0].create().meta.updated).toBe(unifiTemplate().meta.updated);
     const doc = templates[2].create();
     expect(doc.meta.title).toBe('Nettverkstopologi – UDM SE + MikroTik (Lars)');
     expect(doc.meta.updated).toBe('2026-10-21T18:00:00.000Z');
-    expect(doc.canvas).toEqual({ width: 1900, height: 4388, background: '#14171c' });
+    expect(doc.canvas).toEqual({ width: 1900, height: 4422, background: '#14171c' });
   });
 
   it('har redigerbare kort, ikoner, porttabeller, IP-plan, segment og 5×5-brannmur', () => {
@@ -43,10 +43,11 @@ describe('Perfekt topologi – UDM SE + MikroTik', () => {
     expect(mikrotik?.type).toBe('card');
     if (mikrotik?.type === 'card') {
       const text = mikrotik.rows.map((row) => row.text).join('\n');
+      expect(mikrotik.title).toContain('hEX PoE');
       expect(text).toContain('192.168.20.2');
       expect(text).toContain('ether1');
-      expect(text).toContain('vlan-filtering=yes');
-      expect(text).toContain('110/120/130/140');
+      expect(text).toContain('QCA8337');
+      expect(text).toContain('110–140');
       expect(mikrotik.h).toBe(54 + 12 * 32);
     }
 
@@ -74,9 +75,10 @@ describe('Perfekt topologi – UDM SE + MikroTik', () => {
     const ports = findElement(doc, 'table-pt-mikrotik');
     expect(ports?.type).toBe('table');
     if (ports?.type === 'table') {
-      expect(ports.headers).toEqual(['Port', 'Modus', 'VLAN', 'Til']);
-      expect(ports.rows[0]).toEqual(['ether1', 'WAN', '20 untagged', 'USW-24-G2 port 7']);
-      expect(ports.rows).toHaveLength(5);
+      expect(ports.headers).toEqual(['Port', 'Modus', 'VLAN', 'PoE', 'Til']);
+      expect(ports.rows[0]).toEqual(['ether1', 'WAN', '20 untagged', 'inn (passiv)', 'USW-24-G2 port 7']);
+      expect(ports.rows).toHaveLength(6);
+      expect(ports.rows[5][0]).toBe('sfp1');
     }
     expect(findElement(doc, 'table-pt-labsw')?.type).toBe('table');
 
